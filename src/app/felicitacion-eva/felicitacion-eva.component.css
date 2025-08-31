@@ -1,0 +1,276 @@
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Reset ligero (usa tu styles.css global si ya lo tienes) */
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+/* Contenedor principal centrado */
+.cielo-container {
+  min-height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: start;
+  justify-items: center;
+  background: radial-gradient(
+      1200px 400px at 50% 10%,
+      rgba(255, 240, 200, 0.05),
+      transparent 15%
+    ),
+    linear-gradient(180deg, #061226 0%, #0b1630 100%);
+  color: #fff;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial;
+}
+
+/* Hint arriba */
+.hint {
+  margin-top: 8px;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0.95;
+}
+
+/* Sky: área donde están las estrellas */
+.sky {
+  position: relative;
+  width: 100%;
+  max-width: 980px; /* en escritorio no se hace gigante */
+  height: min(68vh, 720px);
+  margin: 12px 0;
+  overflow: visible;
+}
+
+/* Estrella (botón) */
+.star {
+  position: absolute;
+  width: clamp(54px, 13vw, 96px);
+  height: clamp(54px, 13vw, 96px);
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* núcleo de la estrella: el círculo visible */
+.core {
+  width: 38%;
+  height: 38%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff, #ffd, #ffc107);
+  box-shadow: 0 0 8px rgba(255, 210, 80, 0.8), 0 0 18px rgba(255, 130, 60, 0.25),
+    inset 0 -6px 14px rgba(0, 0, 0, 0.12);
+  transition: transform 260ms ease, box-shadow 260ms ease, filter 260ms;
+}
+
+/* marca visual cuando la nota ya se abrió */
+.core.opened {
+  box-shadow: 0 0 12px rgba(86, 204, 242, 0.85),
+    0 0 26px rgba(86, 204, 242, 0.25);
+  transform: scale(1.06);
+  filter: saturate(1.05);
+}
+
+/* efecto burst (clase aplicada temporalmente) */
+.star.burst .core {
+  animation: burst 700ms ease forwards;
+}
+
+@keyframes burst {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  40% {
+    transform: scale(1.35);
+    filter: brightness(1.6);
+  }
+  100% {
+    transform: scale(1.02);
+    filter: brightness(1);
+  }
+}
+
+/* Nota flotante (modal) */
+.note-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(0deg, rgba(1, 3, 9, 0.6), rgba(1, 3, 9, 0.6));
+  z-index: 40;
+  padding: 22px;
+  box-sizing: border-box;
+}
+
+.note-card {
+  width: min(92vw, 520px);
+  max-height: 86vh;
+  overflow: auto;
+  background: linear-gradient(180deg, #fff 0%, #fff9e6 100%);
+  color: #102030;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 18px 50px rgba(2, 6, 22, 0.6);
+  position: relative;
+  animation: noteIn 0.28s ease;
+}
+
+@keyframes noteIn {
+  from {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.note-card .close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 0;
+  background: transparent;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.note-title {
+  margin: 8px 0 10px;
+  text-align: center;
+  font-size: 1.15rem;
+  letter-spacing: 0.2px;
+}
+
+.note-body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding-bottom: 8px;
+}
+
+.note-body img {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.note-body p {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  color: #203040;
+}
+
+/* Actions */
+.note-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.btn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 0;
+  background: #e6e6e6;
+  color: #122;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-primary {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #ff6b7a, #ff4d6d);
+  color: #fff;
+  border: 0;
+}
+
+/* Mensaje final */
+.final-banner {
+  position: fixed;
+  inset: auto 12px 24px 12px;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.final-card {
+  pointer-events: auto;
+  width: min(92vw, 720px);
+  background: linear-gradient(180deg, #fffbea, #fff3db);
+  color: #14324a;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+  text-align: center;
+  animation: pop 0.45s ease;
+}
+
+.final-cta {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* Animaciones generales */
+@keyframes pop {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Responsivo cuidado: en pantallas muy pequeñas reducimos imágenes y texto */
+@media (max-width: 600px) {
+  .note-body {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .note-body img {
+    width: 92px;
+    height: 92px;
+  }
+  .note-card {
+    width: min(80vw, 400px);
+    padding: 12px;
+  }
+  .final-card {
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+  .star {
+    width: clamp(46px, 18vw, 74px);
+    height: clamp(46px, 18vw, 74px);
+  }
+}

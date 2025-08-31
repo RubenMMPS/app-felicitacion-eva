@@ -1,0 +1,64 @@
+<!-- Contenedor general -->
+<div class="cielo-container">
+  <!-- pantalla inicial: pequeña pista arriba -->
+  <div class="hint">Toca las estrellas ✨ (de izquierda a derecha)</div>
+
+  <!-- lienzo de estrellas -->
+  <div class="sky">
+    <button
+      class="star"
+      *ngFor="let star of stars"
+      (click)="openStar(star)"
+      [attr.aria-label]="star.title + ' - abrir nota'"
+      [style.top]="star.top"
+      [style.left]="star.left"
+    >
+      <span class="core" [class.opened]="star.opened"></span>
+    </button>
+  </div>
+
+  <!-- nota flotante (modal simple) -->
+  <div class="note-backdrop" *ngIf="activeStar" (click)="closeNote()">
+    <div class="note-card" (click)="$event.stopPropagation()">
+      <button class="close" (click)="closeNote()" aria-label="Cerrar nota">
+        ✕
+      </button>
+
+      <h3 class="note-title">{{ activeStar.title }}</h3>
+
+      <div class="note-body">
+        <img *ngIf="activeStar.img" [src]="activeStar.img" alt="foto" />
+        <p [innerText]="activeStar.text"></p>
+      </div>
+
+      <div class="note-actions">
+        <button class="btn" (click)="closeNote()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje final cuando todas estén abiertas -->
+  <div class="final-banner" *ngIf="allOpened() && !activeStar">
+    <div class="final-card">
+      <h2>✨ ¡Has descubierto todas las estrellas! ✨</h2>
+      <p>
+        ❤️ ¡¡Feliz cumpleaños!! — Para sorpresa de nadie vuelvo a ser la mejor
+        felicitación, no cualquiera te hace una página web - Me gustaría saber
+        que es lo que piensas de todo esto, a pesar de la respuesta me gustaría
+        que sepas que te deseo lo mejor en la vida porque eres una persona que
+        se lo merece. ❤️
+      </p>
+      <div class="final-cta">
+        <!-- ejemplo: enlace a WhatsApp (cambia el número) -->
+        <a
+          class="btn-primary"
+          href="https://wa.me/34653252303?text=La%20mejor%20felicitación%20como%20cada%20año,%20que%20guapo,%20fuerte,%20inteligente,%20musculoso%20y%20sobretodo%20humilde%20eres%20Rubén."
+          target="_blank"
+          rel="noopener"
+          >Escribir</a
+        >
+        <button class="btn" (click)="reiniciar()">Volver a empezar</button>
+      </div>
+    </div>
+  </div>
+</div>

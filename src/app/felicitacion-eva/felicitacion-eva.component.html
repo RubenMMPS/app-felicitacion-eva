@@ -1,64 +1,279 @@
-<!-- Contenedor general -->
-<div class="cielo-container">
-  <!-- pantalla inicial: pequeña pista arriba -->
-  <div class="hint">Toca las estrellas ✨ (de izquierda a derecha)</div>
+<!-- ============================================
+     INTRO - PANTALLA INICIAL TIPO PELÍCULA
+     ============================================ -->
+<div class="screen intro-screen" *ngIf="currentState === 'INTRO'">
+  <div class="intro-content">
+    <!-- Crédito inicial -->
+    <div class="intro-line intro-line-1">
+      A FILM BY
+    </div>
+    <div class="intro-line intro-line-2">
+      {{ config.intro.director }}
+    </div>
 
-  <!-- lienzo de estrellas -->
-  <div class="sky">
+    <!-- Pausa -->
+    <div class="intro-spacer"></div>
+
+    <!-- Título -->
+    <div class="intro-title">
+      {{ config.intro.title }}
+    </div>
+
+    <!-- Subtítulo -->
+    <div class="intro-subtitle">
+      {{ config.intro.subtitle }}
+    </div>
+
+    <!-- Pausa -->
+    <div class="intro-spacer-lg"></div>
+
+    <!-- Warning -->
+    <div class="intro-warning">
+      WARNING
+    </div>
+    <div class="intro-line intro-line-3">
+      {{ config.intro.warning }}
+    </div>
+
+    <!-- Level -->
+    <div class="intro-level">
+      {{ config.intro.level }}
+    </div>
+
+    <!-- Botón Start -->
+    <button class="btn-start" (click)="startExperience()">
+      {{ config.intro.buttonText }}
+    </button>
+  </div>
+</div>
+
+<!-- ============================================
+     LEVEL 00 - PANTALLA PRINCIPAL
+     ============================================ -->
+<div class="screen level-screen" *ngIf="currentState === 'LEVEL_00' || currentState === 'EXPLORATION'">
+  <!-- Header -->
+  <div class="level-header">
+    <span class="level-info">{{ config.level.header }}</span>
+    <span class="level-recording">{{ config.level.recording }} {{ timeElapsed }}</span>
+  </div>
+
+  <!-- Objetivo -->
+  <div class="level-objective">
+    {{ config.level.objective }}
+  </div>
+
+  <!-- Fondo del nivel (simular Backrooms) -->
+  <div class="backroom-bg"></div>
+
+  <!-- Contador de objetos encontrados -->
+  <div class="objects-counter" *ngIf="objectFoundCount > 0">
+    {{ config.messages.objectsFound }} {{ objectFoundCount }}/{{ config.objects.length }}
+  </div>
+
+  <!-- Objetos interactivos -->
+  <div class="objects-container">
     <button
-      class="star"
-      *ngFor="let star of stars"
-      (click)="openStar(star)"
-      [attr.aria-label]="star.title + ' - abrir nota'"
-      [style.top]="star.top"
-      [style.left]="star.left"
+      *ngFor="let obj of objects"
+      class="interactive-object"
+      [class.found]="obj.opened"
+      [class.active]="obj.isActive"
+      [style.top]="obj.position.top"
+      [style.left]="obj.position.left"
+      [style.--object-size]="obj.size"
+      (click)="openObject(obj)"
+      [attr.aria-label]="obj.title"
     >
-      <span class="core" [class.opened]="star.opened"></span>
+      <img [src]="obj.icon" [alt]="obj.title" class="object-icon" />
+      <div class="object-glow" *ngIf="!obj.opened"></div>
     </button>
   </div>
 
-  <!-- nota flotante (modal simple) -->
-  <div class="note-backdrop" *ngIf="activeStar" (click)="closeNote()">
-    <div class="note-card" (click)="$event.stopPropagation()">
-      <button class="close" (click)="closeNote()" aria-label="Cerrar nota">
-        ✕
-      </button>
-
-      <h3 class="note-title">{{ activeStar.title }}</h3>
-
-      <div class="note-body">
-        <img *ngIf="activeStar.img" [src]="activeStar.img" alt="foto" />
-        <p [innerText]="activeStar.text"></p>
-      </div>
-
-      <div class="note-actions">
-        <button class="btn" (click)="closeNote()">Cerrar</button>
-      </div>
-    </div>
+  <!-- Evento aleatorio (aparece y desaparece) -->
+  <div class="random-event" *ngIf="randomEvent" [@fadeInOut]>
+    {{ randomEvent }}
   </div>
 
-  <!-- Mensaje final cuando todas estén abiertas -->
-  <div class="final-banner" *ngIf="allOpened() && !activeStar">
-    <div class="final-card">
-      <h2>✨ ¡Has descubierto todas las estrellas! ✨</h2>
-      <p>
-        ❤️ ¡¡Feliz cumpleaños!! — Para sorpresa de nadie vuelvo a ser la mejor
-        felicitación, no cualquiera te hace una página web - Me gustaría saber
-        que es lo que piensas de todo esto, a pesar de la respuesta me gustaría
-        que sepas que te deseo lo mejor en la vida porque eres una persona que
-        se lo merece. ❤️
-      </p>
-      <div class="final-cta">
-        <!-- ejemplo: enlace a WhatsApp (cambia el número) -->
-        <a
-          class="btn-primary"
-          href="https://wa.me/34653252303?text=La%20mejor%20felicitación%20como%20cada%20año,%20que%20guapo,%20fuerte,%20inteligente,%20musculoso%20y%20sobretodo%20humilde%20eres%20Rubén."
-          target="_blank"
-          rel="noopener"
-          >Escribir</a
-        >
-        <button class="btn" (click)="reiniciar()">Volver a empezar</button>
+  <!-- Parpadeo de luces (animación) -->
+  <div class="flicker-overlay"></div>
+</div>
+
+<!-- ============================================
+     MODAL - OBJETO ABIERTO
+     ============================================ -->
+<div class="modal-backdrop" *ngIf="currentState === 'OBJECT_OPENED' && activeObject">
+  <div class="modal-content" [class]="'modal-' + activeObject.type">
+    <!-- Cerrar -->
+    <button class="modal-close" (click)="closeObject()" aria-label="Cerrar">
+      ✕
+    </button>
+
+    <!-- Tipo: VHS -->
+    <ng-container *ngIf="activeObject.type === 'vhs'">
+      <div class="modal-header">
+        <span class="modal-label">{{ activeObject.title }}</span>
+        <span class="modal-label">{{ activeObject.subtitle }}</span>
       </div>
+      <div class="modal-body">
+        <img
+          *ngIf="activeObject.content.image"
+          [src]="activeObject.content.image"
+          alt="Memory"
+          class="modal-image"
+        />
+        <p class="modal-text">{{ activeObject.content.text }}</p>
+      </div>
+    </ng-container>
+
+    <!-- Tipo: DOOR -->
+    <ng-container *ngIf="activeObject.type === 'door'">
+      <div class="modal-header">
+        <span class="modal-label">{{ activeObject.title }}</span>
+      </div>
+
+      <!-- Fase 1: Prompt -->
+      <div *ngIf="!showDoorError" class="modal-door-prompt">
+        <p>{{ activeObject.content.prompt }}</p>
+        <button class="btn-door-open" (click)="showDoorError = true">
+          OPEN
+        </button>
+      </div>
+
+      <!-- Fase 2: Error -->
+      <div *ngIf="showDoorError && !showDoorRevelation" class="modal-door-error">
+        <div class="modal-label">ERROR</div>
+        <p>{{ activeObject.content.error }}</p>
+      </div>
+
+      <!-- Fase 3: Revelación -->
+      <div *ngIf="showDoorRevelation" class="modal-body">
+        <p class="modal-revelation">{{ activeObject.content.revelation }}</p>
+        <img
+          *ngIf="activeObject.content.image"
+          [src]="activeObject.content.image"
+          alt="Memory"
+          class="modal-image"
+        />
+        <p class="modal-text">{{ activeObject.content.text }}</p>
+      </div>
+    </ng-container>
+
+    <!-- Tipo: PHOTO -->
+    <ng-container *ngIf="activeObject.type === 'photo'">
+      <div class="modal-header">
+        <span class="modal-label">{{ activeObject.title }}</span>
+        <span class="modal-label">{{ activeObject.subtitle }}</span>
+      </div>
+      <div class="modal-body">
+        <img
+          *ngIf="activeObject.content.image"
+          [src]="activeObject.content.image"
+          alt="Memory"
+          class="modal-image"
+        />
+        <p class="modal-text">{{ activeObject.content.text }}</p>
+      </div>
+    </ng-container>
+
+    <!-- Tipo: MEMORY -->
+    <ng-container *ngIf="activeObject.type === 'memory'">
+      <div class="modal-header">
+        <span class="modal-label">{{ activeObject.title }}</span>
+        <span class="modal-label">{{ activeObject.subtitle }}</span>
+      </div>
+      <div class="modal-body">
+        <img
+          *ngIf="activeObject.content.image"
+          [src]="activeObject.content.image"
+          alt="Memory"
+          class="modal-image"
+        />
+        <p class="modal-text">{{ activeObject.content.text }}</p>
+      </div>
+    </ng-container>
+
+    <!-- Tipo: GIFT (último objeto) -->
+    <ng-container *ngIf="activeObject.type === 'gift'">
+      <div class="modal-header">
+        <span class="modal-label">{{ activeObject.title }}</span>
+      </div>
+      <div class="modal-body modal-gift">
+        <div class="gift-message">
+          <span class="gift-label">{{ activeObject.subtitle }}</span>
+        </div>
+        <p class="modal-text gift-text">{{ activeObject.content.text }}</p>
+        <div class="gift-lights-glitch"></div>
+      </div>
+    </ng-container>
+
+    <!-- Botón cerrar universal -->
+    <button class="btn-close-modal" (click)="closeObject()">CLOSE</button>
+  </div>
+</div>
+
+<!-- ============================================
+     ALL OBJECTS FOUND - MENSAJE INTERMEDIO
+     ============================================ -->
+<div class="screen exit-screen" *ngIf="currentState === 'ALL_OBJECTS_FOUND'">
+  <div class="exit-content">
+    <h2 class="exit-title">{{ config.messages.allObjectsFound }}</h2>
+    <p class="exit-subtitle">{{ config.messages.objectsFound }} {{ objectFoundCount }}/{{ config.objects.length }}</p>
+
+    <button class="btn-exit" (click)="exitLevel()">
+      {{ config.finale.exitButton }}
+    </button>
+  </div>
+</div>
+
+<!-- ============================================
+     TRANSICIÓN - GLITCH/FADE
+     ============================================ -->
+<div class="exit-transition" *ngIf="showExitTransition" [class]="'step-' + exitTransitionStep"></div>
+
+<!-- ============================================
+     EXIT - PANTALLA INTERMEDIA
+     ============================================ -->
+<div class="screen exit-message-screen" *ngIf="currentState === 'EXIT'">
+  <div class="exit-message-content">
+    <h1 class="level-complete">{{ config.finale.levelComplete }}</h1>
+    <p class="exit-message-text">{{ config.finale.foundExit }}</p>
+    
+    <div class="exit-pause"></div>
+    
+    <p class="exit-message-revelation">{{ config.finale.butSomething }}</p>
+  </div>
+</div>
+
+<!-- ============================================
+     FINALE - FELICITACIÓN FINAL
+     ============================================ -->
+<div class="screen finale-screen" *ngIf="currentState === 'FINALE'">
+  <div class="finale-content">
+    <!-- Greeting -->
+    <h1 class="finale-greeting">¡¡ FELIZ CUMPLEAÑOS, {{ config.name }} !!</h1>
+
+    <!-- Mensaje personal -->
+    <div class="finale-message">
+      {{ config.finale.message }}
+    </div>
+
+    <!-- Acciones finales -->
+    <div class="finale-actions">
+      <a
+        [href]="getWhatsappLink()"
+        target="_blank"
+        rel="noopener"
+        class="btn-whatsapp"
+      >
+        {{ config.finale.whatsappButton }}
+      </a>
+      <button class="btn-restart" (click)="restart()">
+        Volver a empezar
+      </button>
+    </div>
+
+    <!-- Pequeño detalle: recordar que fue Backrooms -->
+    <div class="finale-backrooms-easter-egg">
+      — Thanks for visiting Level 00 —
     </div>
   </div>
 </div>
